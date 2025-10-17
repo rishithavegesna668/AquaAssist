@@ -1,8 +1,8 @@
 streamlit
 pandas
-matplotlib
+numpy
 scikit-learn
+matplotlib
+gtts
+Pillow
 joblib
-SpeechRecognition
-gTTS
-PyAudio
