@@ -2,87 +2,81 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-from gtts import gTTS
-import speech_recognition as sr
-from pydub import AudioSegment
 import os
 import gdown
+from gtts import gTTS
 
 st.set_page_config(page_title="🌊 AquaAssist", layout="centered")
-st.title("🌊 AquaAssist - AI Pond Water Quality Checker")
+st.title("🎤 Voice or Manual Input")
 
 # ------------------------------
 # 1️⃣ Load ML Model Safely
 # ------------------------------
 model_path = "model/aqua_model.pkl"
 if not os.path.exists(model_path):
-    # Download model from Google Drive
-    url = "https://drive.google.com/uc?id=YOUR_FILE_ID"  # Replace with your file ID
+    url = "https://drive.google.com/uc?id=YOUR_FILE_ID"  # Replace with your Google Drive file ID
     gdown.download(url, model_path, quiet=False)
 
 try:
     model = joblib.load(model_path)
-    st.success("Model loaded successfully!")
 except Exception as e:
     st.error(f"Error loading model: {e}")
-    st.stop()  # Stop the app if model fails to load
+    st.stop()
 
 st.markdown("---")
 
 # ------------------------------
-# 2️⃣ Manual Input
+# 2️⃣ Input Sliders
 # ------------------------------
-st.subheader("Manual Input")
+st.subheader("pH Level")
+ph = st.slider("", min_value=4.0, max_value=9.0, step=0.1)
 
-ph = st.slider("pH Level", min_value=4.0, max_value=9.0, step=0.1)
-salinity = st.slider("Salinity (ppt)", min_value=5, max_value=40, step=1)
-dissolved_oxygen = st.slider("Dissolved Oxygen (mg/L)", min_value=2.0, max_value=10.0, step=0.1)
-ammonia = st.slider("Ammonia (ppm)", min_value=0.0, max_value=2.0, step=0.01)
+st.subheader("Salinity (ppt)")
+salinity = st.slider("", min_value=5, max_value=40, step=1)
 
-if st.button("Predict Water Quality (Manual)"):
+st.subheader("Dissolved Oxygen (mg/L)")
+do = st.slider("", min_value=2.0, max_value=10.0, step=0.1)
+
+st.subheader("Ammonia (ppm)")
+ammonia = st.slider("", min_value=0.0, max_value=2.0, step=0.01)
+
+st.markdown("---")
+
+# ------------------------------
+# 3️⃣ Prediction
+# ------------------------------
+if st.button("Connecting 🌊"):
     try:
-        input_data = [[ph, salinity, dissolved_oxygen, ammonia]]
+        input_data = [[ph, salinity, do, ammonia]]
         prediction = model.predict(input_data)[0]
-        st.success(f"Predicted Water Quality: {prediction}")
+
+        st.success(f"✅ Water Quality: {prediction}")
+        st.info("నీటి నాణ్యత బాగుంది. ప్రస్తుత విధానాన్ని కొనసాగించండి.")
+
+        # Save history counter
+        if "history" not in st.session_state:
+            st.session_state.history = 0
+        st.session_state.history += 1
+
+        st.write(st.session_state.history)
+        st.write("📁 Saved to history.")
 
         # Text-to-speech
-        tts = gTTS(text=f"The predicted water quality is {prediction}", lang='en')
-        tts.save("output.mp3")
-        st.audio("output.mp3")
+        tts_text = f"Predicted water quality is {prediction}"
+        tts = gTTS(text=tts_text, lang='en')
+        tts.save("tts_output.mp3")
+        st.audio("tts_output.mp3")
+
     except Exception as e:
         st.error(f"Prediction error: {e}")
 
 st.markdown("---")
 
 # ------------------------------
-# 3️⃣ Voice Input via File Upload
+# 4️⃣ Voice Upload (Optional)
 # ------------------------------
 st.subheader("Voice Input (Upload Audio)")
-
-st.markdown("Record your voice saying something like: 'pH seven, salinity twenty, oxygen five, ammonia point five' and upload the file.")
-
-uploaded_file = st.file_uploader("Upload your voice recording (.wav or .mp3)", type=["wav","mp3"])
-
+st.markdown("Record your voice saying e.g., 'pH seven, salinity twenty, oxygen five, ammonia point five' and upload the file.")
+uploaded_file = st.file_uploader("Upload .wav or .mp3", type=["wav", "mp3"])
 if uploaded_file is not None:
-    try:
-        # Convert mp3 to wav if needed
-        if uploaded_file.name.endswith(".mp3"):
-            sound = AudioSegment.from_mp3(uploaded_file)
-            sound.export("temp.wav", format="wav")
-            audio_file = "temp.wav"
-        else:
-            audio_file = uploaded_file
-
-        recognizer = sr.Recognizer()
-        with sr.AudioFile(audio_file) as source:
-            audio_data = recognizer.record(source)
-            text = recognizer.recognize_google(audio_data)
-            st.write("You said:", text)
-
-            st.info("Automatic prediction from voice is not yet implemented. You can use manual sliders for prediction.")
-    except sr.UnknownValueError:
-        st.error("Could not understand the audio")
-    except sr.RequestError as e:
-        st.error(f"Could not request results; {e}")
-    except Exception as e:
-        st.error(f"Audio processing error: {e}")
+    st.info("Voice recognition available soon. Use sliders for now.")
