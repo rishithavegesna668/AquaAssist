@@ -8,3 +8,4 @@ Pillow
 joblib
 SpeechRecognition
 pydub
+gdown
