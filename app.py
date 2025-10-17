@@ -1,21 +1,22 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import joblib
 import os
-import gdown
 from gtts import gTTS
+import plotly.graph_objects as go
 
+# Page config
 st.set_page_config(page_title="🌊 AquaAssist", layout="centered")
-st.title("🎤 Voice or Manual Input")
+
+# Title
+st.markdown("🎤 **Voice or Manual Input**")
 
 # ------------------------------
-# 1️⃣ Load ML Model Safely
+# Load ML Model
 # ------------------------------
 model_path = "model/aqua_model.pkl"
 if not os.path.exists(model_path):
-    url = "https://drive.google.com/uc?id=YOUR_FILE_ID"  # Replace with your Google Drive file ID
-    gdown.download(url, model_path, quiet=False)
+    st.error("ML model not found! Place your model in model/aqua_model.pkl")
+    st.stop()
 
 try:
     model = joblib.load(model_path)
@@ -26,57 +27,58 @@ except Exception as e:
 st.markdown("---")
 
 # ------------------------------
-# 2️⃣ Input Sliders
+# Sliders with min/max display
 # ------------------------------
-st.subheader("pH Level")
-ph = st.slider("", min_value=4.0, max_value=9.0, step=0.1)
+st.markdown("**pH Level**\n\n4.00\n9.00")
+ph = st.slider("", 4.0, 9.0, step=0.1)
 
-st.subheader("Salinity (ppt)")
-salinity = st.slider("", min_value=5, max_value=40, step=1)
+st.markdown("**Salinity (ppt)**\n\n5\n40")
+salinity = st.slider("", 5, 40, step=1)
 
-st.subheader("Dissolved Oxygen (mg/L)")
-do = st.slider("", min_value=2.0, max_value=10.0, step=0.1)
+st.markdown("**Dissolved Oxygen (mg/L)**\n\n2.00\n10.00")
+do = st.slider("", 2.0, 10.0, step=0.1)
 
-st.subheader("Ammonia (ppm)")
-ammonia = st.slider("", min_value=0.0, max_value=2.0, step=0.01)
+st.markdown("**Ammonia (ppm)**\n\n0.00\n2.00")
+ammonia = st.slider("", 0.0, 2.0, step=0.01)
 
 st.markdown("---")
 
 # ------------------------------
-# 3️⃣ Prediction
+# Prediction Button
 # ------------------------------
-if st.button("Connecting 🌊"):
+if st.button("🌊 AquaAssist - AI Pond Water Quality Checker"):
     try:
         input_data = [[ph, salinity, do, ammonia]]
         prediction = model.predict(input_data)[0]
 
-        st.success(f"✅ Water Quality: {prediction}")
-        st.info("నీటి నాణ్యత బాగుంది. ప్రస్తుత విధానాన్ని కొనసాగించండి.")
+        st.markdown(f"✅ **Water Quality: {prediction}**")
+        st.markdown("నీటి నాణ్యత బాగుంది. ప్రస్తుత విధానాన్ని కొనసాగించండి.")
 
-        # Save history counter
+        # History counter
         if "history" not in st.session_state:
             st.session_state.history = 0
         st.session_state.history += 1
 
-        st.write(st.session_state.history)
-        st.write("📁 Saved to history.")
+        st.markdown(f"{st.session_state.history}")
+        st.markdown("📁 Saved to history.")
 
         # Text-to-speech
-        tts_text = f"Predicted water quality is {prediction}"
+        tts_text = f"The predicted water quality is {prediction}"
         tts = gTTS(text=tts_text, lang='en')
         tts.save("tts_output.mp3")
         st.audio("tts_output.mp3")
 
+        # ------------------------------
+        # Graph for water parameters
+        # ------------------------------
+        parameters = ["pH", "Salinity", "DO", "Ammonia"]
+        values = [ph, salinity, do, ammonia]
+
+        fig = go.Figure(
+            data=[go.Bar(x=parameters, y=values, text=values, textposition='auto', marker_color='royalblue')]
+        )
+        fig.update_layout(title_text="Current Pond Parameters", yaxis_title="Value", xaxis_title="Parameter")
+        st.plotly_chart(fig)
+
     except Exception as e:
         st.error(f"Prediction error: {e}")
-
-st.markdown("---")
-
-# ------------------------------
-# 4️⃣ Voice Upload (Optional)
-# ------------------------------
-st.subheader("Voice Input (Upload Audio)")
-st.markdown("Record your voice saying e.g., 'pH seven, salinity twenty, oxygen five, ammonia point five' and upload the file.")
-uploaded_file = st.file_uploader("Upload .wav or .mp3", type=["wav", "mp3"])
-if uploaded_file is not None:
-    st.info("Voice recognition available soon. Use sliders for now.")
