@@ -10,7 +10,7 @@ import base64
 # Page config
 # ------------------------------
 st.set_page_config(page_title="🌊 AquaAssist", layout="wide")
-st.title("🎤 Voice or Manual Input")
+st.title("🎤 Aquaassist")
 
 # ------------------------------
 # Load ML model
