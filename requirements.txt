@@ -6,3 +6,5 @@ matplotlib
 gtts
 Pillow
 joblib
+SpeechRecognition
+pydub
