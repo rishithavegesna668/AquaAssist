@@ -4,12 +4,13 @@ import os
 from gtts import gTTS
 import plotly.graph_objects as go
 import io
+import base64
 
 # ------------------------------
-# Page configuration
+# Page config
 # ------------------------------
 st.set_page_config(page_title="🌊 AquaAssist", layout="wide")
-st.title("🎤 AquaAssist")
+st.title("🎤 Voice or Manual Input")
 
 # ------------------------------
 # Load ML model
@@ -81,21 +82,22 @@ with col2:
             st.markdown("📁 Saved to history.")
 
             # ------------------------------
-            # Text-to-Speech output (English + Telugu)
+            # Text-to-Speech (auto-play) English + Telugu
             # ------------------------------
-            # English TTS
-            tts_en = gTTS(text=f"The predicted water quality is {prediction}", lang='en')
-            tts_en_bytes = io.BytesIO()
-            tts_en.write_to_fp(tts_en_bytes)
-            tts_en_bytes.seek(0)
-            st.audio(tts_en_bytes, format="audio/mp3")
+            def tts_autoplay(text, lang):
+                tts = gTTS(text=text, lang=lang)
+                tts_bytes = io.BytesIO()
+                tts.write_to_fp(tts_bytes)
+                tts_bytes.seek(0)
+                b64_audio = base64.b64encode(tts_bytes.read()).decode()
+                st.markdown(f"""
+                <audio autoplay="true">
+                  <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
+                </audio>
+                """, unsafe_allow_html=True)
 
-            # Telugu TTS
-            tts_te = gTTS(text=telugu_msg, lang='te')
-            tts_te_bytes = io.BytesIO()
-            tts_te.write_to_fp(tts_te_bytes)
-            tts_te_bytes.seek(0)
-            st.audio(tts_te_bytes, format="audio/mp3")
+            tts_autoplay(f"The predicted water quality is {prediction}", "en")
+            tts_autoplay(telugu_msg, "te")
 
             # Update graph color after prediction
             fig = go.Figure(
