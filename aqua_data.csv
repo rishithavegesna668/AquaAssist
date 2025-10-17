@@ -1,0 +1,11 @@
+pH,salinity,DO,ammonia,quality
+7.5,15,6.5,0.2,Safe
+8.0,12,6.0,0.15,Safe
+6.8,10,5.8,0.22,Safe
+6.2,28,4.2,0.6,Moderate
+6.5,25,4.5,0.5,Moderate
+5.5,35,3.2,0.9,Unsafe
+5.0,40,2.8,1.2,Unsafe
+7.0,18,5.9,0.3,Safe
+6.9,22,4.4,0.6,Moderate
+5.8,30,3.5,0.8,Unsafe
